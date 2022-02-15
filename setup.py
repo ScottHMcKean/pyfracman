@@ -22,24 +22,12 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
     ],
     keywords=['discrete fracture network', 'fracman', 'geoscience'],
-    package_dir={'': 'pyfracman'},
-    packages=find_packages(where='pyfracman'),
-    python_requires='>=3.6, <4',
+    packages=['pyfracman'],
+    python_requires='>=3.9, <4',
     install_requires=[
         'pandas',
         'numpy'
         ],
-
-    # Not a bad idea
-    # extras_require={
-    #     'dev': ['check-manifest'],
-    #     'test': ['coverage'],
-    # },
-
-    # Will be added during development
-    # package_data={
-    #     'sample': ['package_data.dat'],
-    # }, 
 
     project_urls={
         'Fracman': 'https://www.golder.com/fracman/',
