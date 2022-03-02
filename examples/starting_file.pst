@@ -1,0 +1,24 @@
+pcf
+* control data
+restart estimation
+1  1  1  0  1
+1  1  single  point  1  0  0
+10  -3.0  0.3  0.03  10  999
+5.0  5.0  1.0e-3
+0.1  noaui
+5  .005  4  4  .005  4
+1  1  1
+* parameter groups
+p32_vals  relative  1E-3  1E-4  switch  1.50  parabolic
+* parameter data
+p32_a  none  relative  0.01  0.001  0.1  p32_vals  1.0  0.0  1
+p32_b  none  relative  0.01  0.001  0.1  p32_vals  1.0  0.0  1
+* observation groups
+prediction
+* observation data
+total_length  10000  1  prediction
+* model command line
+python run_simulation.py test1.fmf
+* model input/output
+test1.ptf  test1.fmf
+output.pin  output.sts

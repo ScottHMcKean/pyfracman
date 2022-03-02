@@ -1,0 +1,56 @@
+{
+    "control data":{
+        "restart": true,
+        "mode": "estimation",
+        "parameters": 1,
+        "observations": 1,
+        "parameter groups": 1,
+        "priors": 0,
+        "observations groups": 0
+    },
+    "parameter groups":{
+
+    },
+    "parameter data":{
+
+    },
+    "observation groups":{
+
+    },
+    "model command line":{
+
+    },
+    "model input/output":{
+
+    },
+    "automatic user intervention":{
+
+    },
+    "singular value decomposition":{
+
+    },
+    "lsqr":{
+
+    },
+    "sensitivity reuse":{
+
+    },
+    "svd assist":{
+
+    },
+    "derivatives command line":{
+
+    },
+    "prior information":{
+
+    },
+    "predictive analysis":{
+
+    },
+    "regularisation":{
+
+    },
+    "pareto":{
+
+    }
+}
