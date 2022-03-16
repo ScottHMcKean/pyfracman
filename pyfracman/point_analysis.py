@@ -43,3 +43,19 @@ def read_asc_file(filename: str) -> pd.DataFrame:
     columns = [l.split()[0] for l in lines[3 : 3 + ncols]]
     data = [l.split() for l in lines[3 + ncols :]]
     return pd.DataFrame(data, columns=columns).apply(pd.to_numeric)
+
+
+def parse_gocad_surface(filename: str) -> pd.DataFrame:
+    """Parse a gocad surface and return a dataframe of xyz vertices
+
+    Args:
+        filename (str): Relative filename
+
+    Returns:
+        pd.DataFrame: Dataframe
+    """
+    ts_df = pd.read_csv(filename)
+    vrtx = ts_df[ts_df.iloc[:, 0].str.contains("VRTX")]
+    surf = vrtx.iloc[:, 0].str.split(" ", expand=True).iloc[:, 2:5].astype(float)
+    surf.columns = ["x", "y", "z"]
+    return surf
