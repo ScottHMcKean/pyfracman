@@ -13,8 +13,8 @@ def clean_columns(df_cols: pd.core.indexes.base.Index) -> pd.core.indexes.base.I
         pd.core.indexes.base.Index: cleaned columns
     """
     return (df_cols
-        .str.replace("[m]","")
-        .str.replace("[\[\]!&]","")
+        .str.replace("[m]","", regex=False)
+        .str.replace("[\[\]!&]","", regex=False)
         .str.lower()
         )
 

@@ -4,52 +4,94 @@ Module to read .fab files and return properties
 import pandas as pd
 import numpy as np
 
-def read_fractures(f, is_tess=False):
+
+def read_tesselated_fractures(f):
     # Read the fracture
-    fracs = []
+    frac_nodes = []
+    frac_faces = []
+    frac_properties = []
     frac_ids = []
-    trans = []
-    normals = []
-    properties_list = []
-    nd = 3
+    sets = []
     for line in f:
         # exit upon end keyword
-        if line.strip() in ["END FRACTURE", "END TESSFRACTURE"]:
+        if line.strip() == "END TESSFRACTURE":
             return (
-                fracs,
                 np.asarray(frac_ids),
-                np.asarray(trans),
-                np.asarray(normals),
-                properties_list,
+                np.asarray(sets),
+                frac_nodes,
+                frac_faces,
+                frac_properties,
             )
 
         # first line is the properties
-        if is_tess:
-            fracid, num_vert, *properties = line.split()
-        else:
-            fracid, num_vert, t, *properties = line.split()
-            trans.append(float(t))
-
+        fracid, num_nodes, num_faces, set_no = line.split()
         frac_ids.append(int(fracid))
-        properties_list.append(properties)
+        sets.append(float(set_no))
 
-        # now we read each one of the vertices
+        # now we read all the nodes (must be 3D xyz)
+        num_nodes = int(num_nodes)
+        nodes = np.zeros((num_nodes, 3))
+        for i in range(num_nodes):
+            data = f.readline().split()
+            nodes[i] = np.asarray(data[1:])
+
+        frac_nodes.append(nodes.T)
+
+        # now we read all the faces with properties
+        num_faces = int(num_faces)
+
+        # read first face to declare an array
+        first_face = f.readline().split()
+        face_info = np.zeros((num_faces, 5))
+        properties = np.zeros((num_faces, len(first_face) - 5))
+        face_info[0] = np.asarray(first_face[:5])
+        properties[0] = np.asarray(first_face[5:])
+        for i in range(1, num_faces):
+            data = f.readline().split()
+            face_info[i] = np.asarray(data[:5])
+            properties[i] = np.asarray(data[5:])
+
+        frac_faces.append(face_info.T)
+        frac_properties.append(properties.T)
+
+
+def read_fractures(f):
+    # Read the fracture
+    vertices = []
+    frac_ids = []
+    sets = []
+    normals = []
+    properties = []
+    for line in f:
+        # exit upon end keyword
+        if line.strip() == "END FRACTURE":
+            return (
+                np.asarray(frac_ids),
+                np.asarray(sets),
+                np.asarray(normals),
+                vertices,
+                properties,
+            )
+
+        # first line is the properties
+        fracid, num_vert, set_no, *props = line.split()
+        sets.append(float(set_no))
+        frac_ids.append(int(fracid))
+        properties.append(props)
+
+        # now we read each one of the vertices  (must be 3D xyz)
         num_vert = int(num_vert)
-        vert = np.zeros((num_vert, nd))
+        vert = np.zeros((num_vert, 3))
         for i in range(num_vert):
             data = f.readline().split()
             vert[i] = np.asarray(data[1:])
 
-        # Transpose to nd x n_pt format
-        vert = vert.T
-        fracs.append(vert)
+        # transpose to nd x n_pt format and add to frac list
+        vertices.append(vert.T)
 
-        # Now we read the normal vector
+        # now we read the normal vector
         normal_vector = f.readline().split()
         normals.append(normal_vector)
-
-        if is_tess:
-            trans.append(int(normal_vector[1]))
 
 
 def read_keyword(line):
@@ -110,27 +152,28 @@ def parse_fab_file(f_name):
             elif line.strip() == "BEGIN FRACTURE":
                 # Read fractures
                 (
-                    output["fracs"],
                     output["fid"],
-                    output["trans"],
+                    output["sets"],
                     output["normals"],
-                    output["prop_list"],
-                ) = read_fractures(f, is_tess=False)
+                    output["vertices"],
+                    output["properties"],
+                ) = read_fractures(f)
             elif line.strip() == "BEGIN TESSFRACTURE":
-                # Read tess_fractures
+                # Read tessellated fractures
                 (
-                    output["tess_fracs"],
-                    output["tess_fid"],
-                    output["tess_sgn"],
-                    output["tess_normals"],
-                    output["tess_prop_list"],
-                ) = read_fractures(f, is_tess=True)
+                    output["t_fid"],
+                    output["t_sets"],
+                    output["t_nodes"],
+                    output["t_faces"],
+                    output["t_properties"],
+                ) = read_tesselated_fractures(f)
             elif line.strip() == "BEGIN ROCKBLOCK":
-                # Not considered block
-                pass
+                raise NotImplementedError("Rock Block Not Implemented, Sorry!")
             elif line.strip()[:5] == "BEGIN":
-                # Check for keywords not yet implemented.
+                # Check for keywords not yet implemented
                 raise ValueError("Unknown section type " + line)
 
-    output["property_df"] = make_properties_df(output["fid"], output["prop_dict"], output["prop_list"])
+    output["property_df"] = make_properties_df(
+        output["fid"], output["prop_dict"], output["properties"]
+    )
     return output

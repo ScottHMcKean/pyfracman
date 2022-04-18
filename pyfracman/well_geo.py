@@ -70,3 +70,31 @@ def well_surveys_to_linestrings(surveys: pd.DataFrame) -> gpd.GeoDataFrame:
         .apply(lambda x: LineString(x.tolist()))
     )
     return gpd.GeoDataFrame(line_gdf, geometry="geometry")
+
+
+def stage_locs_to_gdf(stage_locs: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """Convert the stage locations to a geodataframe with multiple geometries.
+    Adds center (geometry), top, bottom, and linestring to stage dataframe.
+
+    Args:
+        stage_locs (gpd.GeoDataFrame): Geodataframe of the stage locations with
+        well, stage, mid xyz, top xyz, and bottom xyz columns.
+
+    Returns:
+        gpd.GeoDataFrame: Dataframe with well, stage, and linestring
+    """
+    stage_gdf = gpd.GeoDataFrame(
+        stage_locs,
+        geometry=gpd.points_from_xy(stage_locs["x_center_m"], stage_locs["y_center_m"]),
+    )
+
+    stage_gdf["top_pt"] = gpd.points_from_xy(
+        stage_locs["x_top_m"], stage_locs["y_top_m"]
+    )
+    stage_gdf["bot_pt"] = gpd.points_from_xy(
+        stage_locs["x_bottom_m"], stage_locs["y_bottom_m"]
+    )
+    stage_gdf["stg_line"] = stage_gdf.apply(
+        lambda row: LineString([row["bot_pt"], row["top_pt"]]), axis=1
+    )
+    return stage_gdf
