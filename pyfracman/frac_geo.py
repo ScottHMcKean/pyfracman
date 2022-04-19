@@ -1,6 +1,9 @@
+import pandas as pd
 import numpy as np
 from shapely.geometry import LineString
 from sklearn.linear_model import LinearRegression
+from .data import clean_columns
+from pathlib import Path
 
 # Module for geospatial analysis of fractures
 def flatten_frac(vertices: np.ndarray, z_val: float = None) -> LineString:
@@ -51,3 +54,46 @@ def get_mid_z(vertices: np.array) -> float:
         float: Midpoint
     """
     return vertices[2, :].mean()
+
+
+def get_fracture_set_stats(fpath: Path, set_name: str, set_alias: str) -> pd.DataFrame:
+    """Parse a connection export from FracMan to get the Fracture set statistics
+
+    Args:
+        fpath (Path): file path
+        set_name (str): name of fracture set to summarize
+
+    Returns:
+        pd.DataFrame: Dataframe with statistics
+    """
+    conn = pd.read_csv(fpath, delim_whitespace=True).rename(
+        columns={"Set_Name": "FractureSet"}
+    )
+    conn.columns = clean_columns(conn.columns)
+
+    # get set ids
+    set_ids = (
+        conn.query("fractureset == @set_name").groupby("object")["fracid"].apply(list)
+    )
+    set_ids.name = set_alias + "_ids"
+
+    # get set counts
+    set_ct = conn.query("fractureset == @set_name").groupby("object").count().iloc[:, 0]
+    set_ct.name = set_alias + "_count"
+
+    # get stage counts
+    stages = (
+        conn.groupby("object")
+        .count()
+        .reset_index()
+        .rename(columns={"FractureSet": "interactions"})
+    )
+    stages["stage_no"] = stages.object.str.split("_").str[-1]
+    stages["well"] = stages.object.str.split("_").str[-3]
+    stages = (
+        stages[["stage_no", "well", "object"]]
+        .merge(set_ids, left_on="object", right_index=True)
+        .merge(set_ct, left_on="object", right_index=True)
+    )
+
+    return stages
