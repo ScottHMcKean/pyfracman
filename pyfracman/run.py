@@ -9,8 +9,8 @@ class FracmanRunner:
 
         self.fracman_exe_path = None
         self.non_responded_time = 0.0 #first time the process was not responding
-        self.maxnon_responded_time = 6000.0 #max time for not responding process
-        self.time_out = 50000.0 #max total time for the process
+        self.maxnon_responded_time = 60.0 #max time for not responding process
+        self.time_out = 120.0 #max total time for the process
         self.start_time = 0 #simulation start time
         self.show_window = False #should we show the fracman window?
         self.check_interval_s = 5 #check the process after t seconds
