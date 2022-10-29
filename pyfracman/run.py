@@ -1,19 +1,21 @@
 import time
 import subprocess
 
+
 class FracmanRunner:
     """Class to run FracMan with a macro file and monitor it
     Initial design credit due to Thomas Bym & SKB
     """
+
     def __init__(self):
 
         self.fracman_exe_path = None
-        self.non_responded_time = 0.0 #first time the process was not responding
-        self.maxnon_responded_time = 60.0 #max time for not responding process
-        self.time_out = 120.0 #max total time for the process
-        self.start_time = 0 #simulation start time
-        self.show_window = False #should we show the fracman window?
-        self.check_interval_s = 5 #check the process after t seconds
+        self.non_responded_time = 0.0  # first time the process was not responding
+        self.maxnon_responded_time = 60.0  # max time for not responding process
+        self.time_out = 600.0  # max total time for the process
+        self.start_time = 0  # simulation start time
+        self.show_window = False  # should we show the fracman window?
+        self.check_interval_s = 5  # check the process after t seconds
 
     def Run(self, macro_filepath):
         """run FracMan with the macro"""
@@ -21,22 +23,22 @@ class FracmanRunner:
             system_command = "fracman " + macro_filepath
         else:
             assert isinstance(self.fracman_exe_path, str)
-            system_command = self.fracman_exe_path + "\" \"" + macro_filepath + "\""
-        
+            system_command = self.fracman_exe_path + '" "' + macro_filepath + '"'
+
         print("RUNNING: {0}".format(macro_filepath))
         info = subprocess.STARTUPINFO()
         info.dwFlags = 1
         info.wShowWindow = self.show_window
 
-        #start the process
+        # start the process
         p = subprocess.Popen(system_command, stdin=subprocess.PIPE, startupinfo=info)
         self.start_time = time.time()
-        
+
         while True:
             time.sleep(self.check_interval_s)
             t = time.time()
 
-            #terminate if the program times out due to lack of convergence
+            # terminate if the program times out due to lack of convergence
             if (t - self.start_time) > self.time_out:
                 p.terminate()
                 print("TIME_OUT: {0}".format(macro_filepath))
@@ -46,18 +48,20 @@ class FracmanRunner:
             if self.check_pid_response(p.pid):
                 self.non_responded_time = 0
                 continue
-            
-            #check if the process finished
+
+            # check if the process finished
             if p.poll() != None:
                 print("NORMAL_FINISH: {0}".format(macro_filepath))
                 break
 
-            #process is not responding or finished already
-            if self.non_responded_time == 0: #first time the process was not responding
+            # process is not responding or finished already
+            if (
+                self.non_responded_time == 0
+            ):  # first time the process was not responding
                 self.non_responded_time = t
                 continue
-            
-            #terminate if program stalls
+
+            # terminate if program stalls
             if t - self.non_responded_time > self.maxnon_responded_time:
                 p.terminate()
                 print("NOT_RESPONDING: {0}".format(macro_filepath))
